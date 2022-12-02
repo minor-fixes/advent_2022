@@ -1,0 +1,19 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@python_pip//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "aoc",
+    srcs = ["main.py"],
+    data = ["//input:input_data"],
+    main = "main.py",
+    deps = [
+        ":days",
+        "@rules_python//python/runfiles",
+        requirement("absl-py"),
+    ],
+)
+
+py_library(
+    name = "days",
+    srcs = glob(["day_*.py"]),
+)
