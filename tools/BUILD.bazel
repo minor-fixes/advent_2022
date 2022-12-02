@@ -1,0 +1,4 @@
+sh_binary(
+    name = "update_requirements",
+    srcs = ["update_requirements.sh"],
+)
