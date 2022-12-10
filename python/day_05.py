@@ -1,7 +1,6 @@
-import collections
 import dataclasses
 import re
-from typing import ClassVar, Optional
+from typing import ClassVar, List, Optional, Tuple
 
 
 @dataclasses.dataclass
@@ -28,30 +27,19 @@ class Crate:
 class Stack:
     top: Optional[Crate] = None
 
-    def push(self, c: Crate) -> None:
-        c.next = self.top
-        self.top = c
+    def push(self, begin: Crate, end: Crate) -> None:
+        end.next = self.top
+        self.top = begin
 
-    def pop(self) -> Crate:
-        ret = self.top
-        self.top = self.top.next
-        return ret
+    def pop(self, n: int) -> Tuple[Crate, Crate]:
+        begin = travel = self.top
+        for _ in range(n - 1):
+            travel = travel.next
+        self.top = travel.next
+        return (begin, travel)
 
     def peek(self) -> str:
         return self.top.name
-
-    def restack_n_from(self, other: "Stack", n: int) -> None:
-        for _ in range(n):
-            self.push(other.pop())
-
-    def move_n_from(self, other: "Stack", n: int) -> None:
-        travel = other.top
-        for _ in range(n - 1):
-            travel = travel.next
-        begin = other.top
-        other.top = travel.next
-        travel.next = self.top
-        self.top = begin
 
 
 class Stacks:
@@ -62,33 +50,35 @@ class Stacks:
         for line in reversed(lines):
             for i in range(num_stacks):
                 if (c := line[4 * i + 1]) != " ":
-                    self.stacks[i].push(Crate(c, None))
+                    self.stacks[i].push(crate := Crate(c, None), crate)
 
-    def restack_instruction(self, s: Step):
-        self.stacks[s.end - 1].restack_n_from(self.stacks[s.start - 1], s.repeat)
+    def restack(self, s: Step):
+        for _ in range(s.repeat):
+            self.stacks[s.end - 1].push(*self.stacks[s.start - 1].pop(1))
 
-    def move_instruction(self, s: Step):
-        self.stacks[s.end - 1].move_n_from(self.stacks[s.start - 1], s.repeat)
+    def move(self, s: Step):
+        self.stacks[s.end - 1].push(*self.stacks[s.start - 1].pop(s.repeat))
 
     def message(self):
         return "".join([stack.peek() for stack in self.stacks])
 
 
-def part_1(input: str) -> str:
+def parse(input: str) -> Tuple[Stacks, List[Step]]:
     stack_str, instructions_str = input.split("\n\n")
     stacks = Stacks(stack_str)
     instructions = [
         Step.from_str(line) for line in instructions_str.strip().splitlines()
     ]
-    _ = [stacks.restack_instruction(i) for i in instructions]
+    return (stacks, instructions)
+
+
+def part_1(input: str) -> str:
+    stacks, instructions = parse(input)
+    _ = [stacks.restack(i) for i in instructions]
     return stacks.message()
 
 
 def part_2(input: str) -> str:
-    stack_str, instructions_str = input.split("\n\n")
-    stacks = Stacks(stack_str)
-    instructions = [
-        Step.from_str(line) for line in instructions_str.strip().splitlines()
-    ]
-    _ = [stacks.move_instruction(i) for i in instructions]
+    stacks, instructions = parse(input)
+    _ = [stacks.move(i) for i in instructions]
     return stacks.message()
