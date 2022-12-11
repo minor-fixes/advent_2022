@@ -1,7 +1,8 @@
 import functools
-import itertools
 import operator
 from typing import Any, Iterable
+
+from python import util
 
 
 def split_ruck(rucksack: str) -> Iterable[str]:
@@ -23,16 +24,6 @@ def item_score(item: str) -> int:
     return ord(item) - ord("A") + 27
 
 
-def groups_of(i: Iterable[Any], n: int) -> Iterable[Iterable[Any]]:
-    # From: https://www.geeksforgeeks.org/python-split-tuple-into-groups-of-n/
-    # iter(i) - makes an iterator over i
-    # [...] * n - now there is a list of length n with copies of the iterator
-    # zip(*...) - collect tuples by taking one element from each iter in list.
-    # Because they are copies, taking from the first iter advances the others in
-    # the list.
-    return zip(*([iter(i)] * n))
-
-
 def part_1(input: str) -> int:
     return sum(
         item_score(common_item(split_ruck(ruck))) for ruck in input.strip().splitlines()
@@ -40,5 +31,5 @@ def part_1(input: str) -> int:
 
 
 def part_2(input: str) -> int:
-    groups = groups_of(input.strip().splitlines(), 3)
+    groups = util.groups_of(input.strip().splitlines(), 3)
     return sum(item_score(common_item(group)) for group in groups)
